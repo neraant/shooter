@@ -32,7 +32,7 @@ int main()
 	srand(time(NULL));
 
 	// Window
-	RenderWindow window(VideoMode(1440, 960), "Zombie house");
+	RenderWindow window(VideoMode(1440, 960), "game");
 	view.reset(FloatRect(0, 0, 640, 480));
 
 	GameOverScreen gameOverScreen;
