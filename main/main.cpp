@@ -17,11 +17,99 @@ class Player {
 };
 
 class Enemy :public Entity {
+public:
+	Enemy(sf::Texture& texture, float X, float Y, int W, int H, String Name) :Entity(texture, X, Y, W, H, Name) {
+		if (name == "Enemy") {
+			sprite.setTextureRect(sf::IntRect(0, 0, w, h));
+			dx = 0.1;//даем скорость.этот объект всегда двигается
+		}
+	}
+	void checkCollisionWithMap(float Dx, float Dy)//ф ция проверки столкновений с картой
+	{
+		for (int i = y / 32; i < (y + h) / 32; i++)//проходимся по элементам карты
+			for (int j = x / 32; j < (x + w) / 32; j++)
+			{
+				// Проверяем, что индексы не выходят за пределы массива
+				if (i >= 0 && i < HEIGHT_MAP && j >= 0 && j < WIDTH_MAP && TileMap[i][j] == '0')
+				{
+					if (dy > 0 && i * 32 - h >= 0)
+					{
+						y = i * 32 - h;
+						dy = -dy; // изменяем направление движения
+					}
+					if (dy < 0 && i * 32 + 32 < HEIGHT_MAP * 32)
+					{
+						y = i * 32 + 32;
+						dy = -dy; // изменяем направление движения
+					}
+					if (dx > 0 && j * 32 - w >= 0)
+					{
+						x = j * 32 - w;
+						dx = -dx; // изменяем направление движения
+					}
+					if (dx < 0 && j * 32 + 32 < WIDTH_MAP * 32)
+					{
+						x = j * 32 + 32;
+						dx = -dx; // изменяем направление движения
+					}
+				}
+			}
+	}
+	float GetEnemyCoordinateX() {
+		return x;
+	}
+	float GetEnemyCoordinateY() {
+		return y;
+	}
+	void update(float time, float playerX, float playerY) // добавляем координаты игрока в параметры функции
+	{
+		if (name == "Enemy") {
+			checkCollisionWithMap(dx, 0);//обрабатываем столкновение по Х
+			x += dx * time;
+			checkCollisionWithMap(0, dy);//обрабатываем столкновение по Y
+			y += dy * time;
+			sprite.setPosition(x + w / 2, y + h / 2); //задаем позицию спрайта в место его центра
 
+			// Вычисляем вектор направления от врага к игроку
+			float directionX = playerX - x;
+			float directionY = playerY - y;
+
+			// Нормализуем вектор направления (делаем его длину равной 1), чтобы скорость врага была постоянной
+			float length = sqrt(directionX * directionX + directionY * directionY);
+			directionX /= length;
+			directionY /= length;
+
+			// Обновляем dx и dy в соответствии с направлением к игроку
+			dx = directionX * 0.05; // speed - это скорость врага
+			dy = directionY * 0.05;
+
+
+			if (health <= 0) { life = false; }
+		}
+	}
 };
 
 class Bullet : public Entity {
+public:
+	Bullet(sf::Texture& texture, String Name, float X, float Y, int W, int H, float DX, float DY)
+		: Entity(texture, X, Y, W, H, Name) {
+		dx = DX;
+		dy = DY;
+		speed = 0.8;
+		w = h = 16;
+		life = true;
 
+		sprite.setTexture(texture);
+		sprite.setOrigin(w / 2, h / 2);
+	}
+
+	void update(float time)
+	{
+		x += dx * time * speed; // обновляем положение пули
+		y += dy * time * speed;
+
+		sprite.setPosition(x + w / 2, y + h / 2);
+	}
 };
 
 // Текстура врага
