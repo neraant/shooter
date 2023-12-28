@@ -21,7 +21,26 @@ class Enemy :public Entity {
 };
 
 class Bullet : public Entity {
+public:
+	Bullet(sf::Texture& texture, String Name, float X, float Y, int W, int H, float DX, float DY)
+		: Entity(texture, X, Y, W, H, Name) {
+		dx = DX;
+		dy = DY;
+		speed = 0.8;
+		w = h = 16;
+		life = true;
 
+		sprite.setTexture(texture);
+		sprite.setOrigin(w / 2, h / 2);
+	}
+
+	void update(float time)
+	{
+		x += dx * time * speed; // обновляем положение пули
+		y += dy * time * speed;
+
+		sprite.setPosition(x + w / 2, y + h / 2);
+	}
 };
 
 // Текстура врага
