@@ -13,7 +13,149 @@ using namespace std;
 int deathN = 0;
 
 class Player {
+public:
+	float x, y;
+public:
+	float w, h, dx, dy, speed;
+	int dir, playerScore, health;
+	bool life;
+	String File;
+	Image image;
+	Texture texture;
+	Sprite sprite;
 
+	FloatRect getRect() {
+		return sf::FloatRect(x, y, w, h);
+	}
+
+	Player(String F, int X, int Y, float W, float H) {
+		dir = 0; speed = 0; playerScore = 0; health = 100;
+		life = true;
+		dx = 0; dy = 0;
+		File = F;
+		w = W; h = H;
+		image.loadFromFile("images/" + File);
+		image.createMaskFromColor(Color(255, 255, 255));
+		texture.loadFromImage(image);
+		sprite.setTexture(texture);
+		x = X; y = Y;
+		sprite.setTextureRect(IntRect(0, 0, w, h));
+		sprite.setOrigin(w / 2, h / 2);
+	}
+
+	void reloadTexture(String F) {
+		File = F;
+		image.loadFromFile("images/" + File);
+		image.createMaskFromColor(Color(255, 255, 255));
+		texture.loadFromImage(image);
+		sprite.setTexture(texture);
+		sprite.setTextureRect(IntRect(0, 0, w, h));
+		sprite.setOrigin(w / 2, h / 2);
+	}
+
+	void update(float time)
+	{
+		isShiftPressed = sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) || sf::Keyboard::isKeyPressed(sf::Keyboard::RShift);
+
+		if (isShiftPressed && !isReloading && !isBoosting) {
+			isBoosting = true;
+			boostTimer.restart();
+		}
+
+		if (isBoosting && boostTimer.getElapsedTime().asSeconds() > 3.0f) {
+			isBoosting = false;
+			isReloading = true;
+			reloadTimer.restart();
+		}
+
+		if (isReloading && reloadTimer.getElapsedTime().asSeconds() > 10.0f) {
+			isReloading = false;
+		}
+
+		float speedMultiplier = (isBoosting ? 2.0f : 1.0f);
+
+		switch (dir)
+		{
+		case 0: dx = speed * speedMultiplier; dy = 0; break;
+		case 1: dx = -speed * speedMultiplier; dy = 0; break;
+		case 2: dx = 0; dy = speed * speedMultiplier; break;
+		case 3: dx = 0; dy = -speed * speedMultiplier; break;
+		}
+
+		x += dx * time;
+		y += dy * time;
+
+		speed = 0;
+		sprite.setPosition(x, y);
+		if (health <= 0) { life = false; speed = 0; }
+	}
+	float GetPlayerCoordinateX() {
+		return x;
+	}
+	float GetPlayerCoordinateY() {
+		return y;
+	}
+	void interactionWithMap() {
+		for (int i = y / 32; i < (y + h) / 32; i++)
+			for (int j = x / 32; j < (x + w) / 32; j++)
+			{
+				if (TileMap[i][j] == '0')
+				{
+					if (dy > 0)
+					{
+						y = i * 32 - h;
+					}
+					if (dy < 0)
+					{
+						y = i * 32 + 32;
+					}
+					if (dx > 0)
+					{
+						x = j * 32 - w;
+					}
+					if (dx < 0)
+					{
+						x = j * 32 + 32;
+					}
+				}
+				if (TileMap[i][j] == 'f') {
+					health -= 40;
+					deathN -= 10;
+					TileMap[i][j] = ' ';
+					int new_i, new_j;
+					do {
+						new_i = std::rand() % HEIGHT_MAP; // замените HEIGHT на высоту вашей карты
+						new_j = std::rand() % WIDTH_MAP; // замените WIDTH на ширину вашей карты
+					} while (TileMap[new_i][new_j] != ' '); // повторяем, пока не найдем свободное место
+
+
+					TileMap[new_i][new_j] = 'f';
+				}
+
+				if (TileMap[i][j] == 'h') {
+					health += 20;
+					deathN += 5;
+					TileMap[i][j] = ' ';
+					if (health > 100) {
+						health = 100;
+					}
+					int new_i, new_j;
+					do {
+						new_i = std::rand() % HEIGHT_MAP; // замените HEIGHT на высоту вашей карты
+						new_j = std::rand() % WIDTH_MAP; // замените WIDTH на ширину вашей карты
+					} while (TileMap[new_i][new_j] != ' '); // повторяем, пока не найдем свободное место
+
+
+					TileMap[new_i][new_j] = 'h';
+				}
+			}
+	}
+private:
+	bool isShiftPressed;
+	bool isBoosting;
+	bool isReloading;
+	Clock boostTimer;
+	Clock reloadTimer;
 };
 
 class Enemy :public Entity {
