@@ -19,7 +19,7 @@ public:
 	float w, h, dx, dy, speed;
 	int dir, playerScore, health;
 	bool life;
-	String File;
+	String File;																										
 	Image image;
 	Texture texture;
 	Sprite sprite;
@@ -330,21 +330,25 @@ int main()
 		Vector2i pixelPos = Mouse::getPosition(window);
 		Vector2f pos = window.mapPixelToCoords(pixelPos);
 
-		// Спавн врага каждые 5 секунд
-		if (gameTime - lastSpawnTime >= 5 && enemies.size() < 30)
-		{
-			// Генерируем случайные координаты для нового врага
-			int randomX = rand() % window.getSize().x;
-			int randomY = rand() % window.getSize().y;
+		bool spawnEnemy = true;
 
-			// Создаем нового врага с новой текстурой
-			enemies.emplace_back(enemyTexture, randomX, randomY, 32, 32, "Enemy");
+		if (spawnEnemy == true) {
+			// Спавн врага каждые 5 секунд
+			if (gameTime - lastSpawnTime >= 5 && enemies.size() < 30)
+			{
+				// Генерируем случайные координаты для нового врага
+				int randomX = rand() % window.getSize().x;
+				int randomY = rand() % window.getSize().y;
 
-			// Добавляем новый таймер в lastDamageTime
-			lastDamageTime.emplace_back();
+				// Создаем нового врага с новой текстурой
+				enemies.emplace_back(enemyTexture, randomX, randomY, 32, 32, "Enemy");
 
-			// Обновляем время последнего спавна
-			lastSpawnTime = gameTime;
+				// Добавляем новый таймер в lastDamageTime
+				lastDamageTime.emplace_back();
+
+				// Обновляем время последнего спавна
+				lastSpawnTime = gameTime;
+			}
 		}
 
 		Event event;
@@ -407,20 +411,22 @@ int main()
 				}
 			}
 		}
-		for (int i = 0; i < enemies.size(); i++) {
-			enemies[i].update(time, player.x, player.y);
+		if (spawnEnemy == true) {
+			for (int i = 0; i < enemies.size(); i++) {
+				enemies[i].update(time, player.x, player.y);
 
-			// Проверяем столкновение врага с игроком и прошло ли 2 секунды с последнего урона
-			if (enemies[i].getRect().intersects(player.getRect()) && lastDamageTime[i].getElapsedTime().asSeconds() >= 2) {
-				// Уменьшаем здоровье игрока
-				player.health -= 15; // Уменьшаем здоровье игрока на 40
+				// Проверяем столкновение врага с игроком и прошло ли 2 секунды с последнего урона
+				if (enemies[i].getRect().intersects(player.getRect()) && lastDamageTime[i].getElapsedTime().asSeconds() >= 2) {
+					// Уменьшаем здоровье игрока
+					player.health -= 15; // Уменьшаем здоровье игрока на 40
 
-				// Сбрасываем таймер урона
-				lastDamageTime[i].restart();
+					// Сбрасываем таймер урона
+					lastDamageTime[i].restart();
 
-				// Проверяем, жив ли еще игрок
-				if (player.health <= 0) {
-					player.life = false;
+					// Проверяем, жив ли еще игрок
+					if (player.health <= 0) {
+						player.life = false;
+					}
 				}
 			}
 		}
@@ -498,8 +504,10 @@ int main()
 		for (const auto& bullet : bullets) {
 			window.draw(bullet.sprite);
 		}
-		for (int i = 0; i < enemies.size(); i++) {
-			window.draw(enemies[i].sprite);
+		if (spawnEnemy == true) {
+			for (int i = 0; i < enemies.size(); i++) {
+				window.draw(enemies[i].sprite);
+			}
 		}
 
 		ostringstream playerHealth;    // объявили переменную
@@ -520,17 +528,20 @@ int main()
 				player.health = 0;
 
 				bullets.clear();
+				enemies.clear();
 
 			}
 
 			// Сброс флагов и времени
 			lastSpawnTime = 0;
 			isMove = false;
+			spawnEnemy = false;
 			dX = 0;
 			dY = 0;
 
-			// Очистка векторов врагов и 
+			// Очистка векторов врагов 
 			bullets.clear();
+			enemies.clear();
 
 			// Если игрок умер, показываем экран окончания игры
 			gameOverScreen.draw(window);
@@ -538,9 +549,10 @@ int main()
 			// Если нажата клавиша Enter, перезапускаем игру
 			if (gameOverScreen.isRestart(window)) {
 				
+				spawnEnemy = false;
+
 				// Очистка векторов врагов и пульdddddddddddd
 				bullets.clear();
-				enemies.clear();
 
 				// Сброс игрового времени
 				gameTimeClock.restart();
