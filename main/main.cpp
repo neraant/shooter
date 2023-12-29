@@ -262,7 +262,7 @@ int main()
 	srand(time(NULL));
 
 	// Window
-	RenderWindow window(VideoMode(1440, 960), "game");
+	RenderWindow window(VideoMode(1680, 1050), "game");
 	view.reset(FloatRect(0, 0, 640, 480));
 
 	GameOverScreen gameOverScreen;
